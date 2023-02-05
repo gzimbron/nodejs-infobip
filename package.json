@@ -4,7 +4,8 @@
 	"description": "Base express ts project",
 	"main": "index.js",
 	"scripts": {
-		"dev": "ts-node-dev --respawn --transpileOnly src/index.ts",
+		"build": "tsc",
+		"dev": "ts-node-dev src/index.ts",
 		"tsc": "tsc",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
