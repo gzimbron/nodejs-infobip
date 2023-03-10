@@ -1,3 +1,4 @@
+import { AuthType, Infobip } from '@infobip-api/sdk';
 import dotenv from 'dotenv';
 import express from 'express';
 
@@ -13,16 +14,34 @@ app.get('/', (_, res) => {
 	res.send('Hello World!');
 });
 
-app.get('/numero/:numero', (req, res) => {
-	const { numero } = req.params;
+app.post('/whatsapp', async (req, res) => {
+	const { phone, message } = req.body;
 
-	res.json({ numero });
-});
+	const client = new Infobip({
+		baseUrl: process.env.INFOBIP_BASE_URL!,
+		apiKey: process.env.INFOBIP_API_KEY!,
+		authType: AuthType.ApiKey
+	});
 
-app.post('/hola', (req, res) => {
-	const { name } = req.body;
+	const messageConfig = {
+		type: 'text',
+		from: process.env.INFOBIP_SENDER_PHONE!,
+		to: phone,
+		content: {
+			text: message
+		}
+	};
 
-	res.send(`Hello ${name}!`);
+	try {
+		const result = await client.channels.whatsapp.send(messageConfig);
+
+		console.log(result);
+		res.json({ sucess: true, data: result.data });
+	} catch (error) {
+		console.error(error);
+
+		res.status(500).json({ sucess: false, error });
+	}
 });
 
 app.listen(PORT, () => {
