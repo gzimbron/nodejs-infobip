@@ -15,7 +15,7 @@ app.get('/', (_, res) => {
 });
 
 app.post('/whatsapp', async (req, res) => {
-	const { phone, message } = req.body;
+	const { phone, message, sender } = req.body;
 
 	const client = new Infobip({
 		baseUrl: process.env.INFOBIP_BASE_URL!,
@@ -25,7 +25,7 @@ app.post('/whatsapp', async (req, res) => {
 
 	const messageConfig = {
 		type: 'text',
-		from: process.env.INFOBIP_SENDER_PHONE!,
+		from: sender || process.env.INFOBIP_SENDER_PHONE!,
 		to: phone,
 		content: {
 			text: message
@@ -35,12 +35,59 @@ app.post('/whatsapp', async (req, res) => {
 	try {
 		const result = await client.channels.whatsapp.send(messageConfig);
 
-		console.log(result);
 		res.json({ sucess: true, data: result.data });
 	} catch (error) {
 		console.error(error);
 
 		res.status(500).json({ sucess: false, error });
+	}
+});
+
+app.post('/wpp_template', async (req, res) => {
+	const {
+		phone,
+		sender,
+		template: { name, language, data }
+	} = req.body;
+
+	if (!phone) return res.status(400).json({ sucess: false, error: 'Missing phone number' });
+
+	if (!name || !language || !data)
+		return res.status(400).json({ sucess: false, error: 'Missing template data' });
+
+	const client = new Infobip({
+		baseUrl: process.env.INFOBIP_BASE_URL!,
+		apiKey: process.env.INFOBIP_API_KEY!,
+		authType: AuthType.ApiKey
+	});
+
+	const templateMessage = {
+		type: 'template',
+		messages: [
+			{
+				from: sender || process.env.INFOBIP_SENDER_PHONE!,
+				to: phone,
+				content: {
+					templateName: name,
+					language: language,
+					templateData: {
+						body: {
+							placeholders: data
+						}
+					}
+				}
+			}
+		]
+	};
+
+	try {
+		const result = await client.channels.whatsapp.send(templateMessage);
+
+		return res.json({ sucess: true, data: result.data });
+	} catch (error) {
+		console.error(error);
+
+		return res.status(500).json({ sucess: false, error });
 	}
 });
 
