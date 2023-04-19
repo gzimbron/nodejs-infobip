@@ -47,7 +47,7 @@ app.post('/wpp_template', async (req, res) => {
 	const {
 		phone,
 		sender,
-		template: { name, language, data }
+		template: { name, language, data = [] }
 	} = req.body;
 
 	if (!phone) return res.status(400).json({ sucess: false, error: 'Missing phone number' });
@@ -72,7 +72,7 @@ app.post('/wpp_template', async (req, res) => {
 					language: language,
 					templateData: {
 						body: {
-							placeholders: data
+							placeholders: data || []
 						}
 					}
 				}
